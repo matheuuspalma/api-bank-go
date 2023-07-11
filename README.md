@@ -1,2 +1,10 @@
 # api-bank-go
-API created in go to create an account and manipulate data.
+
+
+- API capable of:
+
+  Create an account
+  
+  Update data
+  
+  Do transaction between accounts
