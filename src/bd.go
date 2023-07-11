@@ -23,7 +23,7 @@ func (database *databaseType) openConnection() error {
 	if(err != nil){
 
 	}
-	database.db, err = sql.Open("postgres", "host=localhost port=5432 user=palma password=123456 dbname=teste sslmode=disable")
+	database.db, err = sql.Open("postgres", "host=localhost port=5432 user=" + user " password=" +password "dbname=teste sslmode=disable")
 	if err != nil {
 		fmt.Println("Error opening database!")
 		panic(err)
