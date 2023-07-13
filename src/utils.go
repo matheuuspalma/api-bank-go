@@ -1,8 +1,14 @@
-package app
+package main
 
 // Check the current error
-func Check(e error) {
+func CheckError(e error) {
 	if e != nil {
-		log.fatal(e)
+		panic(e)
+	}
+}
+
+func CheckErrorInt(e int) {
+	if e != 0 {
+		panic(e)
 	}
 }
