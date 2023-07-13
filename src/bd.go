@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"os"
+	"errors"
 
 	_ "github.com/lib/pq"
 )
@@ -11,6 +12,7 @@ import (
 type databaseType struct {
 	db *sql.DB
 	tx *sql.Tx
+	tableName string
 }
 
 type employee struct {
@@ -19,6 +21,15 @@ type employee struct {
 	salario       int
 	cd_nascimento string
 	idade         int
+}
+
+type accounts {
+	account_id      int
+	nome          	string
+	cd_agencia 		string
+	saldo        	float64
+	status 		  	string
+	cliente_since 	string
 }
 
 func (database *databaseType) openConnection() int {
@@ -75,14 +86,14 @@ func getUserandPassword(user *string, password *string) error {
 	return err
 }
 
-func createTable(db *sql.DB, table string) sql.Result {
+func (database *databaseType) createTable() sql.Result {
 
-	result := exec(db, "drop table if exists "+table)
+	result := exec(database.db, "drop table if exists "+ database.tableName)
 
 	if result != nil {
 		fmt.Println("\nCreating table!\n")
 
-		result = exec(db, `create table `+table+` (
+		result = exec(database.db, `create table `+ database.tableName+ ` (
 		primary_key int,
 		nome varchar(80),
 		salario int,
@@ -105,9 +116,16 @@ func exec(db *sql.DB, sql string) sql.Result {
 	return result
 }
 
-func insert(tx *sql.Tx, e *employee) error {
+func (database *databaseType) insert(e *accounts) error {
 
-	stmt, err := tx.Prepare("insert into employees(primary_key, nome, salario, cd_nascimento, idade) values ($1, $2, $3, $4, $5)")
+	exist,err := checkAccount(e)
+
+	if exist == true{
+		fmt.Println(err)
+		return errors.New("This account already existe !!")
+	}
+
+	stmt, err := database.tx.Prepare("insert into accounts (id_account, nome , cd_agencia, saldo, status, cliente_since) values ($1, $2, $3, $4, $5, $6)")
 
 	if err != nil {
 		fmt.Printf("Error inserting employee!")
@@ -123,9 +141,35 @@ func insert(tx *sql.Tx, e *employee) error {
 	return err
 }
 
-func selectAll(db *sql.DB, tableName string) {
+func (database *databaseType) checkAccount(e *accounts) bool, error{
 
-	rows, _ := db.Query("select * from " + tableName)
+	buffer := selectSpecific("account_id, name", "accounts")
+	var aux accounts
+
+	for buffer.Next() {
+		rows.Scan(&aux.account_id, &aux.nome)
+		if(aux.account_id == e.account_id){
+			return true, errors.New("Account " + aux.nome + "already exist!")
+		}
+	}
+}
+
+func (database *databaseType) selectSpecific(statement string, tableName string) {
+
+	rows, _ := database.db.Query("select * from " + tableName)
+	defer rows.Close()
+
+	for rows.Next() {
+		var e employee
+		rows.Scan(&e.pk, &e.nome, &e.salario, &e.cd_nascimento, &e.idade)
+		fmt.Println(e)
+	}
+}
+
+
+func (database *databaseType) selectAll(tableName string) {
+
+	rows, _ := database.db.Query("select * from " + tableName)
 	defer rows.Close()
 
 	for rows.Next() {
